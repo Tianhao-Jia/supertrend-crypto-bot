@@ -11,7 +11,7 @@ import numpy as np
 from datetime import datetime
 import time
 
-exchange = ccxt.binanceus({
+exchange = ccxt.binance({
     "apiKey": config.BINANCE_API_KEY,
     "secret": config.BINANCE_SECRET_KEY
 })
@@ -71,7 +71,7 @@ def check_buy_sell_signals(df):
     if not df['in_uptrend'][previous_row_index] and df['in_uptrend'][last_row_index]:
         print("changed to uptrend, buy")
         if not in_position:
-            order = exchange.create_market_buy_order('ETH/USD', 0.05)
+            order = exchange.create_market_buy_order('BNB/USDT', 0.011)
             print(order)
             in_position = True
         else:
@@ -80,7 +80,7 @@ def check_buy_sell_signals(df):
     if df['in_uptrend'][previous_row_index] and not df['in_uptrend'][last_row_index]:
         if in_position:
             print("changed to downtrend, sell")
-            order = exchange.create_market_sell_order('ETH/USD', 0.05)
+            order = exchange.create_market_sell_order('BNB/USDT', 0.01)
             print(order)
             in_position = False
         else:
@@ -88,10 +88,10 @@ def check_buy_sell_signals(df):
 
 def run_bot():
     print(f"Fetching new bars for {datetime.now().isoformat()}")
-    bars = exchange.fetch_ohlcv('ETH/USDT', timeframe='1m', limit=100)
+    bars = exchange.fetch_ohlcv('BNB/USDT', timeframe='5m', limit=100)
     df = pd.DataFrame(bars[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-
+    df['timestamp'] = pd.to_datetime(df['timestamp'].dt.tz_localize('UTC').dt.tz_convert('America/Vancouver'),unit='ms')
     supertrend_data = supertrend(df)
     
     check_buy_sell_signals(supertrend_data)
